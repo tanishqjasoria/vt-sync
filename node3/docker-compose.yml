@@ -1,0 +1,72 @@
+version: "3.9"
+services:
+  execution:
+    tty: true
+    environment:
+    - TERM=xterm-256color
+    - COLORTERM=truecolor
+    stop_grace_period: 30s
+    container_name: sedge-execution-client
+    restart: unless-stopped
+    image: ${EC_IMAGE_VERSION}
+    networks:
+    - sedge
+    volumes:
+    - ${EC_DATA_DIR}:/nethermind/data
+    - ${EC_NODES_DIR}:/nethermind/nodes
+    - ${EC_JWT_SECRET_PATH}:/tmp/jwt/jwtsecret
+    ports:
+    - ${DISC_PORT}:${DISC_PORT}/tcp
+    - ${DISC_PORT}:${DISC_PORT}/udp
+    expose:
+    - ${RPC_PORT}
+    - ${ENGINE_PORT}
+    command:
+    - --config=${NETWORK}
+    - --datadir=/nethermind/data
+    - --log=${NETHERMIND_LOG_LEVEL}
+    - --JsonRpc.Enabled=true
+    - --JsonRpc.Host=0.0.0.0
+    - --JsonRpc.Port=${RPC_PORT}
+    - --JsonRpc.JwtSecretFile=/tmp/jwt/jwtsecret
+    - --JsonRpc.EngineHost=0.0.0.0
+    - --JsonRpc.EnginePort=${ENGINE_PORT}
+    - --Network.DiscoveryPort=${DISC_PORT}
+    - --Network.P2PPort=${DISC_PORT}
+    - --Init.StatelessProcessingEnabled=false
+    - --Sync.VerkleSync=true
+    - --Sync.FastSync=true
+    - --Init.StaticNodesPath=/nethermind/nodes/nodes.json
+  consensus:
+    stop_grace_period: 30s
+    container_name: sedge-consensus-client
+    restart: unless-stopped
+    image: ${CC_IMAGE_VERSION}
+    networks:
+    - sedge
+    volumes:
+    - ${CC_DATA_DIR}:/var/lib/lodestar/consensus
+    - ${CUSTOM_CONFIG}:/var/lib/custom_config_data
+    - ${CC_JWT_SECRET_PATH}:/tmp/jwt/jwtsecret
+    ports:
+    - 9004:9004/tcp
+    - 9004:9004/udp
+    - 5054:5054/tcp
+    expose:
+    - 4000
+    environment:
+      NODE_OPTIONS: --max_old_space_size=6144
+    command:
+    - beacon
+    - --dataDir=/var/lib/lodestar/consensus
+    - --paramsFile=/var/lib/custom_config_data/config.yaml
+    - --bootnodesFile=/var/lib/custom_config_data/boot_enr.yaml
+    - --genesisStateFile=/var/lib/custom_config_data/genesis.ssz
+    - --execution.urls=${EC_AUTH_URL}
+    - --port=${CONS_PORT}
+    - --rest.port=${REST_PORT}
+    - --jwt-secret=/tmp/jwt/jwtsecret
+networks:
+  sedge:
+    name: sedge-network
+    external: true
