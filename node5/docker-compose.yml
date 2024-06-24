@@ -1,6 +1,7 @@
 version: "3.9"
 services:
   execution:
+    hostname: ${EXEC_HOST}
     tty: true
     environment:
     - TERM=xterm-256color
@@ -38,6 +39,7 @@ services:
     - --Sync.FastSync=true
     - --Init.StaticNodesPath=/nethermind/nodes/nodes.json
   consensus:
+    hostname: ${CONS_HOST}
     stop_grace_period: 30s
     container_name: sedge-consensus-client
     restart: unless-stopped
