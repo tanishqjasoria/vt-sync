@@ -7,7 +7,7 @@ services:
     - TERM=xterm-256color
     - COLORTERM=truecolor
     stop_grace_period: 30s
-    container_name: sedge-execution-client
+    container_name: sedge-execution-client-4
     restart: unless-stopped
     image: ${EC_IMAGE_VERSION}
     networks:
@@ -41,7 +41,7 @@ services:
   consensus:
     hostname: ${CONS_HOST}
     stop_grace_period: 30s
-    container_name: sedge-consensus-client
+    container_name: sedge-consensus-client-4
     restart: unless-stopped
     image: ${CC_IMAGE_VERSION}
     networks:
@@ -51,11 +51,9 @@ services:
     - ${CUSTOM_CONFIG}:/var/lib/custom_config_data
     - ${CC_JWT_SECRET_PATH}:/tmp/jwt/jwtsecret
     ports:
-    - 9004:9004/tcp
-    - 9004:9004/udp
-    - 5054:5054/tcp
+      - ${CONS_PORT}:${CONS_PORT}/tcp
     expose:
-    - 4000
+      - ${REST_PORT}
     environment:
       NODE_OPTIONS: --max_old_space_size=6144
     command:
